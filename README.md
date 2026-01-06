@@ -102,3 +102,4 @@ ouvrir une Pull Request
 ## 📜 Licence
 
 Projet académique — utilisation libre à des fins pédagogiques.
+
