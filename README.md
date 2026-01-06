@@ -57,7 +57,7 @@ smart-parking/
     │   └── SmartParkingClient.jsx # composant principal
     ├── package.json
     └── ...
-
+```
 ## 🚀 Installation et exécution
 
 ### ✔ Prérequis
@@ -103,5 +103,6 @@ ouvrir une Pull Request
 ## 📜 Licence
 
 Projet académique — utilisation libre à des fins pédagogiques.
+
 
 
