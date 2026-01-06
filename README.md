@@ -66,18 +66,18 @@ smart-parking/
 - Node.js **16+**
 
 ### 1️⃣ Installation du Backend (Python)
-
+```bash
 cd parking-backend
 pip install fastapi uvicorn mesa
 uvicorn backend:app --reload
-
+```
 ### 2️⃣ Installation du Frontend (React)
-
+```bash
 cd parking-frontend
 npm install
 npm install lucide-react recharts
 npm run dev
-
+```
 ## 🎮 Utilisation
 
 - ouvrir l’interface frontend
@@ -92,17 +92,19 @@ Légende :
 - 🟩 Standard
 
 ## 🤝 Contribution
-
+```bash
 fork du projet
 git checkout -b feature/NouvelleFeature
 git commit -m "Add nouvelle feature"
 git push origin feature/NouvelleFeature
-
+```
 ouvrir une Pull Request
 
 ## 📜 Licence
 
-Projet académique — utilisation libre à des fins pédagogiques.
+Projet académique — utilisation non libre.
+contacter moi 
+
 
 
 
