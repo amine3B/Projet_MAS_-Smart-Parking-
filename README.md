@@ -45,6 +45,7 @@ Ce projet compare les performances et revenus entre :
 
 ## 📂 Structure du projet
 
+```bash
 smart-parking/
 ├── parking-backend/               # Logique Python
 │   ├── agents.py                  # Définition des agents (Voitures, Places)
@@ -102,4 +103,5 @@ ouvrir une Pull Request
 ## 📜 Licence
 
 Projet académique — utilisation libre à des fins pédagogiques.
+
 
