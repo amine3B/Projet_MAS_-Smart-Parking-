@@ -1,19 +1,16 @@
-# Lancez ce fichier : uvicorn backend:app --reload
+# Lancez ce fichier avec : python backend.py
+# Ou : uvicorn backend:app --reload
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import uvicorn 
 from model import SmartParkingModel
 from agents import VehicleAgent, ParkingSpotAgent
 
 app = FastAPI()
 
-# Configuration CORS : Permet au Frontend (React) de discuter avec le Backend
-origins = [
-    "http://127.0.0.1:5173",
-    "http://localhost:5173",  # Vite utilise parfois localhost
-    "http://127.0.0.1:3000",
-    "http://localhost:3000",
-]
+# Configuration CORS pour permettre au Front React de communiquer
+origins = ["http://localhost:5173", "http://127.0.0.1:5173", "*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,43 +20,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Stockage global du modèle
 current_model = None
 
 @app.post("/init")
-def init_model(spawn_rate: float = 0.2, mode: str = "FCFS"):
-    """
-    Initialise la simulation et renvoie la configuration de la grille.
-    """
+def init_model(spawn_rate: float = 0.3, mode: str = "FCFS"):
     global current_model
-    # On force 20x20 pour avoir une belle grille, modifiable ici
-    width, height = 20, 20
-    current_model = SmartParkingModel(width=width, height=height, spawn_rate=spawn_rate, mode=mode)
-    
+    # Initialisation avec une grille standard
+    current_model = SmartParkingModel(width=20, height=20, spawn_rate=spawn_rate, mode=mode)
     return {
-        "message": "Simulation initialized",
-        "config": {
-            "width": width,
-            "height": height,
-            "spawn_rate": spawn_rate,
-            "mode": mode
-        }
+        "message": f"Simulation initialized in {mode} mode",
+        "config": {"width": 20, "height": 20}
     }
 
 @app.get("/step")
 def step_model():
-    """
-    Avance d'un pas (step) et renvoie l'état complet (Agents + KPIs).
-    """
     global current_model
-    
     if current_model is None:
-        return {"error": "Model not initialized. Call /init first."}
+        return {"error": "Model not initialized"}
     
-    # 1. Avancer la simulation Python
     current_model.step()
     
-    # 2. Sérialisation des données (Python -> JSON)
     spots_data = []
     cars_data = []
     
@@ -73,24 +53,34 @@ def step_model():
                 "occupied": agent.is_occupied
             })
         elif isinstance(agent, VehicleAgent):
-            if agent.pos: # Sécurité si l'agent n'est pas sur la grille
+            if agent.pos: 
                 cars_data.append({
                     "id": str(agent.unique_id),
                     "x": agent.pos[0],
                     "y": agent.pos[1],
                     "state": agent.state,
-                    "budget": getattr(agent, 'budget', 0) # Gestion cas où budget n'existe pas
+                    "budget": agent.budget,  # Envoi du budget au front
+                    "priority": getattr(agent, 'priority_score', 1) 
                 })
 
-    # 3. Récupération des KPIs
-    metrics = {
-        "occupancy": current_model.get_occupancy_rate(),
-        "revenue": current_model.total_revenue,
-        "step": current_model.schedule.steps
-    }
+    # Stats
+    df = current_model.datacollector.get_model_vars_dataframe()
+    last_metrics = df.iloc[-1].to_dict() if not df.empty else {}
 
     return {
         "spots": spots_data,
         "cars": cars_data,
-        "metrics": metrics
+        "metrics": {
+            "occupancy": last_metrics.get("Occupancy", 0),
+            "revenue": last_metrics.get("Revenue", 0),
+            "entered": last_metrics.get("Entered", 0), # Ajout pour le frontend
+            "exited": last_metrics.get("Exited", 0),   # Ajout pour le frontend
+            "avg_walking": last_metrics.get("Avg_Walking_Distance", 0),
+            "fairness_variance": last_metrics.get("Waiting_Variance", 0),
+            "step": current_model.schedule.steps
+        }
     }
+
+if __name__ == "__main__":
+    print("Démarrage du serveur Smart Parking sur http://127.0.0.1:8000")
+    uvicorn.run("backend:app", host="127.0.0.1", port=8000, reload=True)
