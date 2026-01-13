@@ -47,12 +47,12 @@ Ce projet compare les performances et revenus entre :
 
 ```bash
 smart-parking/
-├── parking-backend/               # Logique Python
+├── SmartParking_MAS/              # Logique Python
 │   ├── agents.py                  # Définition des agents (Voitures, Places)
 │   ├── model.py                   # Logique du modèle (grille, zones)
 │   └── backend.py                 # API FastAPI
 │
-└── parking-frontend/              # Interface React
+└── smart-parking-front/           # Interface React
     ├── src/
     │   └── SmartParkingClient.jsx # composant principal
     ├── package.json

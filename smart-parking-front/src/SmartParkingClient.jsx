@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Play, Pause, RotateCcw, Zap, Activity, DollarSign, AlertCircle, Clock, CarFront, LogOut, LogIn, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Play, Pause, RotateCcw, Zap, Activity, DollarSign, AlertCircle, Clock, CarFront, LogOut, LogIn, ArrowUp, ArrowDown } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Adresse du Backend Python
@@ -101,7 +101,7 @@ const SmartParkingClient = () => {
   }, [mode]);
 
 
-  // --- RENDU RÉALISTE ---
+  // --- RENDU RÉALISTE --- 
 
   const gridMap = useMemo(() => {
     const map = {};
@@ -116,21 +116,6 @@ const SmartParkingClient = () => {
     return map;
   }, [simState]);
 
-  // Logique de direction des routes (copiée du Backend pour la visualisation)
-  const getRoadDirection = (x, y, w, h) => {
-      // Routes horizontales
-      if (y === 0) return 'left-right'; // Haut (Entrée G -> Sortie D)
-      if (y === h - 1) return 'left-right'; // Bas (Sortie G <- Entrée D)
-
-      // Routes verticales
-      if (x === 0) return 'down'; // Entrée principale
-      if (x === w - 1) return 'up'; // Entrée secondaire qui monte
-      
-      const idx = Math.round(x / 3);
-      if (idx % 2 !== 0) return 'up'; // Impair = Monte
-      return 'down'; // Pair = Descend
-  };
-
   const renderCell = (x, y) => {
     const cellKey = `${x}-${y}`;
     const cellData = gridMap[cellKey];
@@ -141,15 +126,13 @@ const SmartParkingClient = () => {
     
     let content = null;
     let overlayLabel = null; 
-    let roadMarking = null;
 
     // --- MARQUAGE CROISÉ : 2 ENTRÉES / 2 SORTIES ---
-    // IN : Haut-Gauche (0,0) et Bas-Droite (W-1, H-1)
-    // OUT : Haut-Droite (W-1, 0) et Bas-Gauche (0, H-1)
-    
+    // Entrées : (0,0) et (w-1, h-1)
     const isTopLeft = (x === 0 && y === 0);
     const isBottomRight = (x === gridConfig.width - 1 && y === gridConfig.height - 1);
     
+    // Sorties : Les coins opposés
     const isTopRight = (x === gridConfig.width - 1 && y === 0);
     const isBottomLeft = (x === 0 && y === gridConfig.height - 1);
 
@@ -171,40 +154,13 @@ const SmartParkingClient = () => {
     const isRoad = !cellData || cellData.type === 'car_only';
 
     if (isRoad) {
-        // Ajouter flèches directionnelles sur la route
-        const dir = getRoadDirection(x, y, gridConfig.width, gridConfig.height);
-        
-        // --- DOUBLE SENS VISUEL (DIVISÉ) ---
-        // Simule deux voies (Aller/Retour) en dessinant une ligne pointillée centrale
-        // et en affichant des flèches opposées si nécessaire, ou une flèche principale si sens unique.
-        
-        // Pour cette simulation spécifique, nous gardons des sens uniques par colonne
-        // pour simplifier le pathfinding (comme des rues à sens unique en ville).
-        // Mais nous visualisons cela clairement.
-        
-        if (y % 4 === 2 || (y === 0 && x % 4 === 2) || (y === gridConfig.height - 1 && x % 4 === 2)) {
-            let ArrowIcon = null;
-            // Pour simuler "Aller/Vient" sur une même case, on pourrait mettre deux petites flèches
-            // Mais ici, le modèle de données est à sens unique par case. 
-            // On affiche donc le sens unique de la rue.
-            if (dir === 'down') ArrowIcon = ArrowDown;
-            if (dir === 'up') ArrowIcon = ArrowUp;
-            
-            if (ArrowIcon) {
-                roadMarking = (
-                    <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
-                        <ArrowIcon size={10} className="text-slate-300" />
-                    </div>
-                );
-            }
+        // Texture bitume avec ligne de séparation pour les intersections
+        if (y === 0) {
+            bgStyle.borderBottom = "1px dashed rgba(255, 255, 255, 0.1)"; 
+        } else if (y === gridConfig.height - 1) {
+            bgStyle.borderTop = "1px dashed rgba(255, 255, 255, 0.1)"; 
         }
-        
-        // Texture bitume avec ligne médiane (Séparation des voies si applicable)
-        if (x % 3 === 0 || x === gridConfig.width - 1 || y === 0 || y === gridConfig.height - 1) {
-            bgStyle = { ...bgStyle, backgroundImage: 'linear-gradient(to bottom, transparent 40%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.05) 60%, transparent 60%)' };
-            // Ligne jaune centrale pour simuler la double voie si on voulait (visuel)
-            // bgStyle.borderLeft = "1px dashed rgba(255, 255, 0, 0.1)"; 
-        }
+        // Suppression des flèches directionnelles ici
     }
 
     if (cellData) {
@@ -215,7 +171,6 @@ const SmartParkingClient = () => {
             let borderColor = '#64748b'; 
             let markIcon = null;
 
-            // Logique de zone (Basée sur distance sortie)
             if (spot.type === 'VIP') {
                 borderColor = '#fbbf24'; 
                 bgStyle = { backgroundColor: '#2d2518' }; 
@@ -266,19 +221,18 @@ const SmartParkingClient = () => {
                         size={18} 
                         className="text-indigo-400 drop-shadow-xl" 
                         fill="#4338ca"
+                        style={{
+                            transform: car.state === 'MOVING' ? 'scale(1.1)' : 'scale(1)'
+                        }}
                     />
                 </div>
              );
         }
-    } else {
-        // --- Route Vide ---
-        bgStyle = { backgroundColor: '#334155' }; 
     }
 
     return (
       <div key={cellKey} className={containerClass} style={{ width: '24px', height: '24px', ...bgStyle }}>
         {overlayLabel}
-        {roadMarking}
         {content}
       </div>
     );
@@ -339,7 +293,7 @@ const SmartParkingClient = () => {
                 </div>
              </div>
              
-             {/* Traffic Flow Metric */}
+             {/* Traffic Flow Metric 
              <div className="col-span-2 bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-lg flex justify-between items-center">
                  <div className="flex gap-6 w-full">
                     <div className="flex flex-col items-center flex-1 border-r border-slate-700">
@@ -352,7 +306,7 @@ const SmartParkingClient = () => {
                     </div>
                  </div>
              </div>
-
+            */}
              {/* Fairness Metric */}
              <div className="col-span-2 bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-lg flex justify-between items-center">
                 <div>
@@ -428,4 +382,4 @@ const SmartParkingClient = () => {
   );
 };
 
-export default SmartParkingClient ;
+export default SmartParkingClient;

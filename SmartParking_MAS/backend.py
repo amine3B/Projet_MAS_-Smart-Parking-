@@ -9,7 +9,6 @@ from agents import VehicleAgent, ParkingSpotAgent
 
 app = FastAPI()
 
-# Configuration CORS pour permettre au Front React de communiquer
 origins = ["http://localhost:5173", "http://127.0.0.1:5173", "*"]
 
 app.add_middleware(
@@ -25,7 +24,6 @@ current_model = None
 @app.post("/init")
 def init_model(spawn_rate: float = 0.3, mode: str = "FCFS"):
     global current_model
-    # Initialisation avec une grille standard
     current_model = SmartParkingModel(width=20, height=20, spawn_rate=spawn_rate, mode=mode)
     return {
         "message": f"Simulation initialized in {mode} mode",
@@ -59,11 +57,10 @@ def step_model():
                     "x": agent.pos[0],
                     "y": agent.pos[1],
                     "state": agent.state,
-                    "budget": agent.budget,  # Envoi du budget au front
+                    "budget": agent.budget,
                     "priority": getattr(agent, 'priority_score', 1) 
                 })
 
-    # Stats
     df = current_model.datacollector.get_model_vars_dataframe()
     last_metrics = df.iloc[-1].to_dict() if not df.empty else {}
 
@@ -73,8 +70,6 @@ def step_model():
         "metrics": {
             "occupancy": last_metrics.get("Occupancy", 0),
             "revenue": last_metrics.get("Revenue", 0),
-            "entered": last_metrics.get("Entered", 0), # Ajout pour le frontend
-            "exited": last_metrics.get("Exited", 0),   # Ajout pour le frontend
             "avg_walking": last_metrics.get("Avg_Walking_Distance", 0),
             "fairness_variance": last_metrics.get("Waiting_Variance", 0),
             "step": current_model.schedule.steps
@@ -82,5 +77,4 @@ def step_model():
     }
 
 if __name__ == "__main__":
-    print("Démarrage du serveur Smart Parking sur http://127.0.0.1:8000")
     uvicorn.run("backend:app", host="127.0.0.1", port=8000, reload=True)
