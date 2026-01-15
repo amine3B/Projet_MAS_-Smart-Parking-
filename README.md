@@ -6,7 +6,7 @@ Ce projet compare les performances et revenus entre :
 
 - gestion classique **FCFS – First Come First Served**
 - gestion par **enchères dynamiques (Vickrey Auction)**
-
+- gestion par **Mode Prioritaire**
 ## ✨ Fonctionnalités
 
 - **Simulation Multi-Agents (Mesa)**  
