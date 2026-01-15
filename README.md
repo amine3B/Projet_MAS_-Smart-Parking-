@@ -67,13 +67,13 @@ smart-parking/
 
 ### 1️⃣ Installation du Backend (Python)
 ```bash
-cd parking-backend
+cd SmartParking_MAS/
 pip install fastapi uvicorn mesa
 uvicorn backend:app --reload
 ```
 ### 2️⃣ Installation du Frontend (React)
 ```bash
-cd parking-frontend
+cd smart-parking-front/
 npm install
 npm install lucide-react recharts
 npm run dev
